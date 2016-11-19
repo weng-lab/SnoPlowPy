@@ -10,8 +10,8 @@ from utils import Utils
 from joblib import Parallel, delayed
 import traceback
 
-from files_and_paths import Dirs, Datasets
-from helpers_metadata import Exp, ExpFile
+from files_and_paths import Datasets
+from exp import Exp
 
 
 def loadBedBigWigHdf5Bam(idx, total, accessionID, force, refresh, jsononly):
@@ -31,7 +31,7 @@ def loadBedBigWigHdf5Bam(idx, total, accessionID, force, refresh, jsononly):
                 if f.isBed() or f.isBigWig() or f.isGtf() or f.isHdf5() or f.isHotSpot():
                     f.download()
         print(idx + 1, "of", total, "done")
-    except Exception as err:
+    except Exception:
         print(idx + 1, "of", total, "error")
         traceback.print_exc()
 
@@ -68,7 +68,7 @@ class Downloader:
                     if f.isFastqOrFasta():
                         f.download()
                 print(idx + 1, "of", total, "done")
-            except Exception as err:
+            except Exception:
                 print(idx + 1, "of", total, "error")
                 traceback.print_exc()
 
@@ -88,7 +88,7 @@ class Downloader:
                     print("\t", f.fileID)
                     f.download()
                 print(idx + 1, "of", total, "done")
-            except Exception as err:
+            except Exception:
                 print(idx + 1, "of", total, "error")
                 traceback.print_exc()
 

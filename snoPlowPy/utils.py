@@ -6,7 +6,7 @@ import os
 import stat
 import sys
 import shutil
-import json
+import itertools
 import re
 import subprocess
 import errno
@@ -16,15 +16,12 @@ import zipfile
 import urllib
 import tempfile
 import time
-from collections import defaultdict
-from itertools import groupby
 from subprocess import Popen, PIPE
 import hashlib
 import urllib2
 
 from requests.auth import HTTPBasicAuth
 import requests
-import dateutil.parser
 
 
 def printWroteNumLines(fnp):
@@ -139,7 +136,6 @@ class Utils:
                  file_size_bytes=0, skipSizeCheck=None,
                  quiet=False, umask=FileUmask):
         Utils.ensureDir(fnp)
-        fn = os.path.basename(fnp)
         if not skipSizeCheck:
             if 0 == file_size_bytes:
                 fsb = Utils.getHttpFileSizeBytes(url, auth)
@@ -561,8 +557,7 @@ class dotdict(dict):
 def main():
     ut = UtilsTests()
     ut.numLines()
- 
+
 
 if __name__ == "__main__":
     sys.exit(main())
-

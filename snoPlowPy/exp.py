@@ -2,13 +2,12 @@
 
 from __future__ import print_function
 import os
-import sys
 import json
-import shutil
 import collections
-from files_and_paths import Dirs, Urls, Datasets, Genome, Tools
+from files_and_paths import Dirs, Urls, Genome, Tools
 from datetime import datetime
 from utils import Utils, cat
+from exp_file import ExpFile
 
 
 class Exp(object):

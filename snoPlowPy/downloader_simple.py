@@ -2,16 +2,11 @@
 
 from __future__ import print_function
 
-import os
 import sys
 import argparse
-import json
-from utils import Utils
-from joblib import Parallel, delayed
 import traceback
 
-from files_and_paths import Dirs, Datasets
-from helpers_metadata import Exp, ExpFile
+from exp import Exp
 
 
 class DownloaderSimple:
@@ -33,7 +28,7 @@ class DownloaderSimple:
                         f.download()
                         print(f.fnp())
                 print(idx + 1, "of", total, "done")
-            except Exception as err:
+            except Exception:
                 print(idx + 1, "of", total, "error")
                 traceback.print_exc()
 

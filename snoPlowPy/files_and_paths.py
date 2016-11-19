@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
-import os, sys
+import os
+import sys
 from global_config import GlobalConfig
+
 
 def FindMetadataBaseDir():
     dirs = GlobalConfig.metadataDirs
     return BaseDirFromList(dirs, "ENCODE metadata", "METADATA_BASEDIR")
+
 
 def FindJobmonitorBaseDir():
     dirs = [os.getenv("JOBMONITOR_BASEDIR"),
@@ -13,13 +16,15 @@ def FindJobmonitorBaseDir():
             "/nfs/0_jobmonitor@bib5/"]
     return BaseDirFromList(dirs, "job monitor", "JOBMONITOR_BASEDIR", False)
 
+
 def FindRepositoryDir():
     dirs = [os.getenv("WENG_LAB"),
             os.path.expanduser("~/weng-lab")]
     return BaseDirFromList(dirs, "weng lab repository", "WENG_LAB", False)
 
-def BaseDirFromList(dirs, dirname, envsearched, exit_on_failure = True):
-    dirs = [d for d in dirs if d] # remove "None"s
+
+def BaseDirFromList(dirs, dirname, envsearched, exit_on_failure=True):
+    dirs = [d for d in dirs if d]  # remove "None"s
     for d in dirs:
         if os.path.exists(d):
             return d
@@ -28,6 +33,7 @@ def BaseDirFromList(dirs, dirname, envsearched, exit_on_failure = True):
     if exit_on_failure:
         sys.exit(1)
     return "/tmp"
+
 
 class Dirs:
     metadata_base = FindMetadataBaseDir()
@@ -92,6 +98,7 @@ class Dirs:
             raise Exception("file missing: " + fnp)
         return fnp
 
+
 class Genome:
     hg19_chr_lengths = Dirs.GenomeFnp("hg19.chromInfo")
     hg19_2bit = Dirs.GenomeFnp("hg19.2bit")
@@ -109,10 +116,13 @@ class Genome:
     mouse_gencode_m1_tss = Dirs.GenomeFnp("gencode.vM1.annotation.tss.bed")
     mouse_gencode_m8_tss = Dirs.GenomeFnp("gencode.m8.annotation.tss.bed")
 
-    mouse_gencode_m8_gtf_url = "ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M8/gencode.vM8.annotation.gtf.gz"
-    mouse_gencode_m8_gff_url = "ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M8/gencode.vM8.annotation.gff3.gz"
+    mouse_gencode_m8_gtf_url = ("ftp://ftp.sanger.ac.uk/pub/gencode/" +
+                                "Gencode_mouse/release_M8/gencode.vM8.annotation.gtf.gz")
+    mouse_gencode_m8_gff_url = ("ftp://ftp.sanger.ac.uk/pub/gencode/" +
+                                "Gencode_mouse/release_M8/gencode.vM8.annotation.gff3.gz")
 
-    hg19_idr_blacklist = Dirs.GenomeFnp("blacklist/hg19/wgEncodeDacMapabilityConsensusExcludable.bed")
+    hg19_idr_blacklist = Dirs.GenomeFnp("blacklist/hg19/" +
+                                        "wgEncodeDacMapabilityConsensusExcludable.bed")
     mm9_idr_blacklist = Dirs.GenomeFnp("blacklist/mm9/mm9-blacklist.bed")
     mm10_idr_blacklist = Dirs.GenomeFnp("blacklist/mm10/mm10-blacklist.bed")
 
@@ -121,37 +131,38 @@ class Genome:
 
     @staticmethod
     def ChrLenByAssembly(a):
-        files = {"hg19" : Genome.hg19_chr_lengths,
-                 "hg38" : Genome.hg38_chr_lengths,
-                 "GRCh38" : Genome.GRCh38_chr_lengths,
-                 "mm9" : Genome.mm9_chr_lengths,
-                 "mm10" : Genome.mm10_chr_lengths,
-                 "mm10-minimal" : Genome.mm10_chr_lengths}
+        files = {"hg19": Genome.hg19_chr_lengths,
+                 "hg38": Genome.hg38_chr_lengths,
+                 "GRCh38": Genome.GRCh38_chr_lengths,
+                 "mm9": Genome.mm9_chr_lengths,
+                 "mm10": Genome.mm10_chr_lengths,
+                 "mm10-minimal": Genome.mm10_chr_lengths}
         return files[a]
 
     @staticmethod
     def BlacklistByAssembly(a):
-        files = {"hg19" : Genome.hg19_idr_blacklist,
-                 "mm9" : Genome.mm9_idr_blacklist,
-                 "mm10" : Genome.mm10_idr_blacklist,
-                 "mm10-minimal" : Genome.mm10_idr_blacklist}
+        files = {"hg19": Genome.hg19_idr_blacklist,
+                 "mm9": Genome.mm9_idr_blacklist,
+                 "mm10": Genome.mm10_idr_blacklist,
+                 "mm10-minimal": Genome.mm10_idr_blacklist}
         return files[a]
 
     @staticmethod
     def GencodeTSSByAssembly(a):
-        files = {"hg19" : Genome.human_gencode_tss,
-                 "mm9" : Genome.mouse_gencode_m1_tss,
-                 "mm10" : Genome.mouse_gencode_m8_tss,
-                 "mm10-minimal" : Genome.mouse_gencode_m8_tss}
+        files = {"hg19": Genome.human_gencode_tss,
+                 "mm9": Genome.mouse_gencode_m1_tss,
+                 "mm10": Genome.mouse_gencode_m8_tss,
+                 "mm10-minimal": Genome.mouse_gencode_m8_tss}
         return files[a]
 
     @staticmethod
     def TwoBitByAssembly(a):
-        files = {"hg19" : Genome.hg19_2bit,
-                 "mm9" : Genome.mm9_2bit,
-                 "mm10" : Genome.mm10_2bit,
-                 "mm10-minimal" : Genome.mm10_2bit}
+        files = {"hg19": Genome.hg19_2bit,
+                 "mm9": Genome.mm9_2bit,
+                 "mm10": Genome.mm10_2bit,
+                 "mm10-minimal": Genome.mm10_2bit}
         return files[a]
+
 
 class Tools:
     ASdnaseTrack = Dirs.ToolsFnp("ucsc.v287/as/dnase.track.as")
@@ -169,7 +180,7 @@ class Tools:
     headRest = os.path.join(Dirs.ToolsFnp("ucsc.v287"), "headRest")
     liftOver = os.path.join(Dirs.ToolsFnp("ucsc.v287"), "liftOver")
     meme = Dirs.ToolsFnp("meme_4.10.2/bin/meme")
-    #randomLines = os.path.join(Dirs.ToolsFnp("ucsc.v287"), "randomLines")
+    # randomLines = os.path.join(Dirs.ToolsFnp("ucsc.v287"), "randomLines")
     randomLines = Dirs.ToolsFnp("randomLines")
     tomtom = Dirs.ToolsFnp("meme_4.10.2/bin/tomtom")
     twoBitToFa = Dirs.ToolsFnp("ucsc.v287/twoBitToFa")
@@ -177,8 +188,10 @@ class Tools:
     wigToBigWig = Dirs.ToolsFnp("ucsc.v287/wigToBigWig")
     wiggleTools = Dirs.ToolsFnp("wiggletools.static.git.7579e66")
 
+
 class Urls:
     base = "https://www.encodeproject.org"
+
 
 class Webservice:
     urlBase = "http://bib7.umassmed.edu/ws/metadata/"
@@ -189,10 +202,12 @@ class Webservice:
 
     @staticmethod
     def rsyncUrl(localpath, remotepath, rsync_port):
-        return (Webservice.rsyncBase + "/request_rsync?local-path=%s&remote-path=%s") % (rsync_port, localpath, remotepath)
+        return (Webservice.rsyncBase + "/request_rsync?local-path=%s&remote-path=%s") % (rsync_port,
+                                                                                         localpath,
+                                                                                         remotepath)
 
     @staticmethod
-    def localExp(encodeID, localhost = False):
+    def localExp(encodeID, localhost=False):
         if localhost:
             return os.path.join(Webservice.localhostBase, "exp", encodeID)
         return os.path.join(Webservice.urlBase, "exp", encodeID)
@@ -202,23 +217,33 @@ class Webservice:
         return Webservice.localhostBase + uri
 
     @staticmethod
-    def JobMonitorPutUrl(uri, localhost = False):
-        return os.path.join(Webservice.localhostJMBase if localhost else Webservice.jobmonitorBase, "output", uri)
+    def JobMonitorPutUrl(uri, localhost=False):
+        return os.path.join(Webservice.localhostJMBase
+                            if localhost else Webservice.jobmonitorBase,
+                            "output", uri)
 
     @staticmethod
-    def JobMonitorSelectUrl(localhost = False):
-        return os.path.join(Webservice.localhostJMBase if localhost else Webservice.jobmonitorBase, "select")
+    def JobMonitorSelectUrl(localhost=False):
+        return os.path.join(Webservice.localhostJMBase
+                            if localhost else Webservice.jobmonitorBase,
+                            "select")
 
     @staticmethod
-    def JobMonitorActionUrl(localhost = False):
-        return os.path.join(Webservice.localhostJMBase if localhost else Webservice.jobmonitorBase, "db_act")
+    def JobMonitorActionUrl(localhost=False):
+        return os.path.join(Webservice.localhostJMBase
+                            if localhost else Webservice.jobmonitorBase,
+                            "db_act")
 
     @staticmethod
-    def JobMonitorUrl(uri, localhost = False):
-        return os.path.join(Webservice.localhostJMBase if localhost else Webservice.jobmonitorBase, uri)
+    def JobMonitorUrl(uri, localhost=False):
+        return os.path.join(Webservice.localhostJMBase
+                            if localhost else Webservice.jobmonitorBase, uri)
+
 
 class AllHumanDataset:
-    url = Urls.base + "/search/?type=Experiment&replicates.library.biosample.donor.organism.scientific_name=Homo+sapiens&limit=all&format=json"
+    url = (Urls.base + "/search/?type=Experiment" +
+           "&replicates.library.biosample.donor.organism.scientific_name=Homo" +
+           "+sapiens&limit=all&format=json")
     jsonFnp = os.path.join(Dirs.encode_json, "datasets", "all_human.json")
     species = "human"
     chr_lengths = Genome.hg19_chr_lengths
@@ -237,8 +262,11 @@ class AllHumanDataset:
     Webservice_biosample_term_name = os.path.join(Webservice.urlBase,
                                                   "encode/biosample_term_name/")
 
+
 class RoadmapConsolidatedDataset:
-    url = Urls.base + "/search/?type=ReferenceEpigenome&organism.scientific_name=Homo+sapiens&lab.title=Anshul+Kundaje%2C+Stanford&limit=all&format=json"
+    url = (Urls.base + "/search/?type=ReferenceEpigenome" +
+           "&organism.scientific_name=Homo+sapiens&lab.title=Anshul" +
+           "+Kundaje%2C+Stanford&limit=all&format=json")
     jsonFnp = os.path.join(Dirs.encode_json, "datasets", "roadmap.consolidated.json")
     species = "human"
     chr_lengths = Genome.hg19_chr_lengths
@@ -246,8 +274,10 @@ class RoadmapConsolidatedDataset:
     genome = "hg19"
     assemblies = ["hg19", "GRCh38"]
 
+
 class RoadmapDataset:
-    url = Urls.base + "/search/?searchTerm=roadmap&type=Experiment&award.project=Roadmap&limit=all&format=json"
+    url = (Urls.base + "/search/?searchTerm=roadmap&type=Experiment" +
+           "&award.project=Roadmap&limit=all&format=json")
     jsonFnp = os.path.join(Dirs.encode_json, "datasets", "roadmap.json")
     species = "human"
     chr_lengths = Genome.hg19_chr_lengths
@@ -255,8 +285,11 @@ class RoadmapDataset:
     genome = "hg19"
     assemblies = ["hg19", "GRCh38"]
 
+
 class AllMouseDataset:
-    url = Urls.base + "/search/?type=experiment&replicates.library.biosample.donor.organism.scientific_name=Mus%20musculus&limit=all&format=json"
+    url = (Urls.base + "/search/?type=experiment" +
+           "&replicates.library.biosample.donor.organism.scientific_name=Mus%20musculus" +
+           "&limit=all&format=json")
     jsonFnp = os.path.join(Dirs.encode_json, "datasets", "all_mouse.json")
     species = "mouse"
     assemblies = ["mm9", "mm10-minimal", "mm10"]
@@ -271,31 +304,48 @@ class AllMouseDataset:
     webserviceAllBeds = os.path.join(Webservice.urlBase, "encode/all_mouse/beds")
     webservice_eCLIP = os.path.join(Webservice.urlBase, "encode/all_mouse/eCLIP")
 
+
 class smallRNAdataset:
-    url = "https://www.encodeproject.org/search/?type=experiment&assay_term_name=RNA-seq&replicates.library.biosample.donor.organism.scientific_name=Homo+sapiens&replicates.library.size_range=%3C200&status=released&limit=all&files.file_type=fastq&files.read_length=101&format=json"
+    url = ("https://www.encodeproject.org/search/?type=experiment" +
+           "&assay_term_name=RNA-seq" +
+           "&replicates.library.biosample.donor.organism.scientific_name=Homo+sapiens" +
+           "&replicates.library.size_range=%3C200&status=released&limit=all" +
+           "&files.file_type=fastq&files.read_length=101&format=json")
     jsonFnp = os.path.join(Dirs.encode_json, "datasets", "junko.smallRNA.json")
     species = "NA"
 
+
 class cricketDataset:
-    url = "https://www.encodeproject.org/search/?type=project&lab.title=Zhiping%20Weng,%20UMass&status=released&format=json"
+    url = ("https://www.encodeproject.org/search/?type=project" +
+           "&lab.title=Zhiping%20Weng,%20UMass&status=released&format=json")
     jsonFnp = os.path.join(Dirs.encode_json, "datasets", "cricket.json")
     species = "NA"
+
 
 class encode3DNaseHuman:
     # this is a (authenticated) search for datasets using the "'award.rfa=ENCODE3' trick"
     # to select for ENCODE3 data only: all human ENCODE3 DNase-seq datasets from John Stam's lab.
-    url = "https://www.encodeproject.org/search/?type=experiment&award.rfa=ENCODE3&assay_term_name=DNase-seq&replicates.library.biosample.donor.organism.scientific_name=Homo%20sapiens&limit=all&lab.title=John%20Stamatoyannopoulos,%20UW&format=json"
+    url = ("https://www.encodeproject.org/search/?type=experiment&award.rfa=ENCODE3" +
+           "&assay_term_name=DNase-seq" +
+           "&replicates.library.biosample.donor.organism.scientific_name=Homo%20sapiens" +
+           "&limit=all&lab.title=John%20Stamatoyannopoulos,%20UW&format=json")
     jsonFnp = os.path.join(Dirs.encode_json, "datasets", "encode3_human_dnase.json")
     species = "human"
 
+
 class RoadmapFromEncode:
-    url = "https://www.encodeproject.org/search/?award.project=Roadmap&type=experiment&limit=all&format=json"
+    url = ("https://www.encodeproject.org/search/?award.project=Roadmap" +
+           "&type=experiment&limit=all&format=json")
     jsonFnp = os.path.join(Dirs.encode_json, "datasets", "roadmap.json")
     species = "NA"
 
+
 class ENCODE3MouseForChromHMM:
     # all histone mods for mouse as defined in listed projects.
-    webserviceAll = os.path.join(Webservice.urlBase, "encode/byDataset/ENCSR215KPY/ENCSR557UVG/ENCSR837UJN/ENCSR846VTS/ENCSR647ZZB/ENCSR392ERD")
+    webserviceAll = os.path.join(Webservice.urlBase,
+                                 "encode/byDataset/ENCSR215KPY/ENCSR557UVG/" +
+                                 "ENCSR837UJN/ENCSR846VTS/ENCSR647ZZB/ENCSR392ERD")
+
 
 class Datasets:
     all_human = AllHumanDataset
