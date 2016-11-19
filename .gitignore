@@ -91,3 +91,15 @@ ENV/
 # Others
 .DS_Store
 ._.DS_Store
+
+*~
+*.out
+external/
+*.pyc
+TAGS
+\#*
+.\#*
+*.core
+.Rhistory
+Rplots.pdf
+
