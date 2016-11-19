@@ -25,11 +25,13 @@ install:
   - pip install pytest-flake8
   - pip install pytest-helpers-namespace
   - pip install codecov
+  - pip install Sphinx
   - pip install -r requirements.txt
   - pip install .
 
 script:
   - make test
+  - make test-doc
 
 after_success:
   - codecov

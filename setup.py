@@ -7,7 +7,7 @@ from snoPlowPy.version import __version__
 setup(name='snoPlowPy',
       version=__version__,
       # description='',
-      # author='',
+      author='weng-lab',
       # author_email='',
       url='https://github.com/weng-lab/SnoPlowPy',
       license='MIT',
