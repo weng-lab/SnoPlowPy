@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os, sys, json, shutil, collections
+import os
+import sys
+import json
+import shutil
+import collections
 from files_and_paths import Dirs, Urls, Datasets, Genome, Tools
 from datetime import datetime
 from utils import Utils, cat
 
+
 class ExpFile(object):
-    def __init__(self, expID = None, fileID = None):
+    def __init__(self, expID=None, fileID=None):
         self.expID = expID
         self.fileID = fileID
 
@@ -56,7 +61,8 @@ class ExpFile(object):
                                            self.output_type,
                                            "bio" + str(self.bio_rep),
                                            "tech" + str(self.tech_rep),
-                                           "biological_replicates" + str(self.biological_replicates),
+                                           "biological_replicates" +
+                                           str(self.biological_replicates),
                                            self.jsonUrl, self.isPooled]])
 
     def isPeaks(self):
@@ -129,7 +135,8 @@ class ExpFile(object):
             d = os.path.join(Dirs.encode_data, self.expID)
             fn = os.path.basename(self.url)
             fnp = os.path.join(d, fn)
-            if s4s: fnp = fnp.replace("/project/umw_", "/s4s/s4s_")
+            if s4s:
+                fnp = fnp.replace("/project/umw_", "/s4s/s4s_")
             return fnp
 
         if "H3K27ac" == self.assay_term_name:
@@ -197,7 +204,7 @@ class ExpFile(object):
         self.file_format = g["file_format"]
         self.output_type = g["output_type"]
         self.data_create = g["date_created"]
-        self.date_created = g["date_created"] # add w/o typo
+        self.date_created = g["date_created"]  # add w/o typo
         self.md5sum = g["md5sum"]
         self.file_status = g["status"]
 

@@ -2,13 +2,17 @@
 
 from __future__ import print_function
 
-import os, sys, argparse, json
+import os
+import sys
+import argparse
+import json
 from utils import Utils
 from joblib import Parallel, delayed
 import traceback
 
 from files_and_paths import Dirs, Datasets
 from helpers_metadata import Exp, ExpFile
+
 
 def loadBedBigWigHdf5Bam(idx, total, accessionID, force, refresh, jsononly):
     doForce = force
@@ -27,9 +31,10 @@ def loadBedBigWigHdf5Bam(idx, total, accessionID, force, refresh, jsononly):
                 if f.isBed() or f.isBigWig() or f.isGtf() or f.isHdf5() or f.isHotSpot():
                     f.download()
         print(idx + 1, "of", total, "done")
-    except Exception, err:
+    except Exception as err:
         print(idx + 1, "of", total, "error")
         traceback.print_exc()
+
 
 class Downloader:
     def __init__(self, dataset, args):
@@ -48,7 +53,8 @@ class Downloader:
             self.data = json.load(f)
 
     def getFastqsHistone(self, dataset, args):
-        expsJson = filter(lambda e: "ChIP-seq" == e["assay_term_name"], self.data["@graph"])
+        expsJson = filter(lambda e: "ChIP-seq" == e["assay_term_name"],
+                          self.data["@graph"])
         accessionIDs = sorted([e["accession"] for e in expsJson])
         total = len(accessionIDs)
         for idx, accessionID in enumerate(accessionIDs):
@@ -62,12 +68,13 @@ class Downloader:
                     if f.isFastqOrFasta():
                         f.download()
                 print(idx + 1, "of", total, "done")
-            except Exception, err:
+            except Exception as err:
                 print(idx + 1, "of", total, "error")
                 traceback.print_exc()
 
     def getBams(self, dataset, args):
-        expsJson = filter(lambda e: "DNase-seq" == e["assay_term_name"], self.data["@graph"])
+        expsJson = filter(lambda e: "DNase-seq" == e["assay_term_name"],
+                          self.data["@graph"])
         accessionIDs = sorted([e["accession"] for e in expsJson])
         total = len(accessionIDs)
         for idx, accessionID in enumerate(accessionIDs):
@@ -81,34 +88,44 @@ class Downloader:
                     print("\t", f.fileID)
                     f.download()
                 print(idx + 1, "of", total, "done")
-            except Exception, err:
+            except Exception as err:
                 print(idx + 1, "of", total, "error")
                 traceback.print_exc()
 
     @staticmethod
-    def checkBedBigWigHdf5BamParallel(n_jobs, accessionIDs, force, refresh, jsononly):
+    def checkBedBigWigHdf5BamParallel(n_jobs, accessionIDs, force, refresh,
+                                      jsononly):
         t = len(accessionIDs)
-        return Parallel(n_jobs = n_jobs)(delayed(loadBedBigWigHdf5Bam)(
-                i, t, e, force, refresh, jsononly) for i, e in enumerate(accessionIDs))
+        return Parallel(n_jobs=n_jobs)(delayed(loadBedBigWigHdf5Bam)(i, t, e,
+                                                                     force,
+                                                                     refresh,
+                                                                     jsononly)
+                                       for i, e in enumerate(accessionIDs))
 
     def _checkBedBigWigHdf5(self, assay_term_name, force, refresh, jsononly):
         expsJson = self.data["@graph"]
         if assay_term_name:
-            expsJson = filter(lambda e: assay_term_name == e["assay_term_name"], self.data["@graph"])
+            expsJson = filter(lambda e: assay_term_name == e["assay_term_name"],
+                              self.data["@graph"])
         accessionIDs = sorted([e["accession"] for e in expsJson])
-        Downloader.checkBedBigWigHdf5BamParallel(self.args.j, accessionIDs, force, refresh, jsononly)
+        Downloader.checkBedBigWigHdf5BamParallel(self.args.j, accessionIDs,
+                                                 force, refresh, jsononly)
 
     def chipseqs(self):
-        self._checkBedBigWigHdf5("ChIP-seq", self.args.force, self.args.refresh, False)
+        self._checkBedBigWigHdf5("ChIP-seq", self.args.force,
+                                 self.args.refresh, False)
 
     def dnases(self):
-        self._checkBedBigWigHdf5("DNase-seq", self.args.force, self.args.refresh, False)
+        self._checkBedBigWigHdf5("DNase-seq", self.args.force,
+                                 self.args.refresh, False)
 
     def mnases(self):
-        self._checkBedBigWigHdf5("MNase-seq", self.args.force, self.args.refresh, False)
+        self._checkBedBigWigHdf5("MNase-seq", self.args.force,
+                                 self.args.refresh, False)
 
-    def checkAllBedBigWigHdf5(self, force = False, jsononly = False):
+    def checkAllBedBigWigHdf5(self, force=False, jsononly=False):
         self._checkBedBigWigHdf5("", force, self.args.refresh, jsononly)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -125,12 +142,14 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def main():
     args = parse_args()
 
     if args.ids:
         accessionIDs = args.ids.split(',')
-        Downloader.checkBedBigWigHdf5BamParallel(args.j, accessionIDs, True, args.refresh, args.jsononly)
+        Downloader.checkBedBigWigHdf5BamParallel(args.j, accessionIDs, True,
+                                                 args.refresh, args.jsononly)
         return 0
 
     if args.dnase:
@@ -150,6 +169,7 @@ def main():
             down.chipseqs()
         else:
             down.checkAllBedBigWigHdf5(args.force, args.jsononly)
+
 
 if __name__ == "__main__":
     sys.exit(main())

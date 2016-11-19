@@ -2,8 +2,19 @@
 
 from __future__ import print_function
 
-import os, stat, sys, shutil, json, re, subprocess, errno, gzip, tarfile, zipfile
-import urllib, tempfile
+import os
+import stat
+import sys
+import shutil
+import json
+import re
+import subprocess
+import errno
+import gzip
+import tarfile
+import zipfile
+import urllib
+import tempfile
 import time
 from collections import defaultdict
 from itertools import groupby
@@ -15,23 +26,28 @@ from requests.auth import HTTPBasicAuth
 import requests
 import dateutil.parser
 
+
 def printWroteNumLines(fnp):
-    print("\twrote", fnp, '(' + "{:,}".format(numLines(fnp)) +' lines)')
+    print("\twrote", fnp, '(' + "{:,}".format(numLines(fnp)) + ' lines)')
+
 
 def cat(fnp):
     if fnp.endswith(".gz"):
         return "zcat " + fnp
     return "cat " + fnp
 
+
 def numLines(fnp):
     cmds = [cat(fnp), "| wc -l"]
     return int(Utils.runCmds(cmds)[0])
+
 
 def usage():
     print("USUAGE:")
     print(os.path.basename(sys.argv[0]), "submit")
 
-def readFile(fnp, needFile = True):
+
+def readFile(fnp, needFile=True):
     if not os.path.exists(fnp):
         if needFile:
             print("ERROR: file missing:")
@@ -41,21 +57,23 @@ def readFile(fnp, needFile = True):
     with open(fnp) as f:
         return f.readlines()
 
+
 def ranges(i):
     # http://stackoverflow.com/a/4629241
     for a, b in itertools.groupby(enumerate(i), lambda x, y: y - x):
         b = list(b)
         yield b[0][1], b[-1][1]
 
-class Utils:
-    FileUmask = stat.S_IRUSR | stat.S_IWUSR # user read/write
-    FileUmask |= stat.S_IRGRP | stat.S_IWGRP # group read/write
-    FileUmask |= stat.S_IROTH # others read
 
-    DirUmask = stat.S_IRUSR | stat.S_IWUSR # user read/write
-    DirUmask |= stat.S_IRGRP | stat.S_IWGRP # group read/write
-    DirUmask |= stat.S_IROTH # others read
-    
+class Utils:
+    FileUmask = stat.S_IRUSR | stat.S_IWUSR  # user read/write
+    FileUmask |= stat.S_IRGRP | stat.S_IWGRP  # group read/write
+    FileUmask |= stat.S_IROTH  # others read
+
+    DirUmask = stat.S_IRUSR | stat.S_IWUSR  # user read/write
+    DirUmask |= stat.S_IRGRP | stat.S_IWGRP  # group read/write
+    DirUmask |= stat.S_IROTH  # others read
+
     @staticmethod
     def deleteFileIfSizeNotMatch(fnp, file_size_bytes):
         if not os.path.exists(fnp):
@@ -105,11 +123,11 @@ class Utils:
             print("status_code:", r.status_code)
             return None
 
-		# does not (always) work
+        # does not (always) work
         if "Content-Length" in r.headers:
             return int(r.headers["Content-Length"])
         else:
-            return -1 # invalid filesize...
+            return -1  # invalid filesize...
 
     @staticmethod
     def quietPrint(quiet, *args):
@@ -119,7 +137,7 @@ class Utils:
     @staticmethod
     def download(url, fnp, auth=None, force=None,
                  file_size_bytes=0, skipSizeCheck=None,
-                 quiet = False, umask = FileUmask):
+                 quiet=False, umask=FileUmask):
         Utils.ensureDir(fnp)
         fn = os.path.basename(fnp)
         if not skipSizeCheck:
@@ -161,7 +179,7 @@ class Utils:
             Utils.quietPrint(quiet, "status_code:", r.status_code)
             return False
 
-        #with open(fnpTmp, "wb") as f:
+        # with open(fnpTmp, "wb") as f:
         with tempfile.NamedTemporaryFile("wb", delete=False) as f:
             f.write(r.content)
             fnpTmp = f.name
@@ -198,30 +216,30 @@ class Utils:
         return re.sub(r'\W+', '', s).lower()
 
     @staticmethod
-    def ensureDir(fnp, umask = DirUmask):
+    def ensureDir(fnp, umask=DirUmask):
         d = os.path.dirname(fnp)
         if d != "" and not os.path.exists(d):
             Utils.mkdir_p(d, umask)
         return d
 
     @staticmethod
-    def mkdir(path, umask = DirUmask):
+    def mkdir(path, umask=DirUmask):
         try:
             os.mkdir(path)
             # chmod g+w
             st = os.stat(path)
             os.chmod(path, st.st_mode | umask)
-        except OSError as exc: # Python >2.5
+        except OSError as exc:  # Python >2.5
             if exc.errno == errno.EEXIST and os.path.isdir(path):
                 pass
             else:
                 raise
 
     @staticmethod
-    def mkdir_p(path, umask = DirUmask):
+    def mkdir_p(path, umask=DirUmask):
         abspath = os.path.abspath(path)
         dirname = os.path.dirname(abspath)
-        if dirname != abspath: # i.e. dirname("/") == "/"
+        if dirname != abspath:  # i.e. dirname("/") == "/"
             Utils.mkdir_p(dirname, umask)
         Utils.mkdir(abspath, umask)
 
@@ -233,11 +251,12 @@ class Utils:
     @staticmethod
     def run(cmd):
         # from http://stackoverflow.com/a/4418193
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
         # Poll process for new output until finished
         while True:
             nextline = process.stdout.readline()
-            if nextline == '' and process.poll() != None:
+            if nextline == '' and process.poll() is not None:
                 break
             sys.stdout.write(nextline)
             sys.stdout.flush()
@@ -250,7 +269,7 @@ class Utils:
         raise Exception(cmd, exitCode, output)
 
     @staticmethod
-    def runCmds(cmds, verbose = False, cwd=None):
+    def runCmds(cmds, verbose=False, cwd=None):
         cmd = " ".join(cmds)
         if verbose:
             print("running: ", cmd)
@@ -259,15 +278,17 @@ class Utils:
 
         # from http://stackoverflow.com/a/4418193
         if cwd is not None:
-            process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, cwd=cwd,
-                                       stderr=subprocess.STDOUT, executable='/bin/bash')
+            process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                                       cwd=cwd, stderr=subprocess.STDOUT,
+                                       executable='/bin/bash')
         else:
             process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                                       stderr=subprocess.STDOUT, executable='/bin/bash')
+                                       stderr=subprocess.STDOUT,
+                                       executable='/bin/bash')
         # Poll process for new output until finished
         while True:
             nextline = process.stdout.readline()
-            if nextline == '' and process.poll() != None:
+            if nextline == '' and process.poll() is not None:
                 break
             if nextline:
                 ret.append(nextline)
@@ -298,7 +319,7 @@ class Utils:
         # http://stackoverflow.com/a/3729957
         articles = ['a', 'an', 'of', 'the', 'is']
         exceptions = articles
-        word_list = re.split(' ', s)       #re.split behaves as expected
+        word_list = re.split(' ', s)  # re.split behaves as expected
         final = [word_list[0].capitalize()]
         for word in word_list[1:]:
             final.append(word in exceptions and word or word.capitalize())
@@ -310,10 +331,11 @@ class Utils:
         if force or sys.stdout.isatty():
             try:    # if we can load pygments, return color
                 from pygments import highlight, lexers, formatters
-                colorful_json = highlight(unicode(json, 'UTF-8'), lexers.JsonLexer(),
-                    formatters.TerminalFormatter())
+                colorful_json = highlight(unicode(json, 'UTF-8'),
+                                          lexers.JsonLexer(),
+                                          formatters.TerminalFormatter())
                 return colorful_json
-            except: # otherwise, return original json
+            except:  # otherwise, return original json
                 pass
         return json
 
@@ -477,7 +499,8 @@ class Utils:
         intersect_keys = d1_keys.intersection(d2_keys)
         added = d1_keys - d2_keys
         removed = d2_keys - d1_keys
-        modified = {o : (d1[o], d2[o]) for o in intersect_keys if d1[o] != d2[o]}
+        modified = {o: (d1[o], d2[o]) for o in intersect_keys
+                    if d1[o] != d2[o]}
         same = set(o for o in intersect_keys if d1[o] == d2[o])
         return added, removed, modified, same
 
@@ -496,7 +519,8 @@ class Utils:
     @staticmethod
     def remove_non_ascii(s):
         # http://drumcoder.co.uk/blog/2012/jul/13/removing-non-ascii-chars-string-python/
-        return "".join(i for i in s if ord(i)<128)
+        return "".join(i for i in s if ord(i) < 128)
+
 
 class Timer(object):
     # http://stackoverflow.com/a/5849861
@@ -511,6 +535,7 @@ class Timer(object):
             print('[%s]' % self.name,)
         print('Elapsed: %s' % (time.time() - self.tstart))
 
+
 class UtilsTests:
     def numLines(self):
         n = 173
@@ -524,6 +549,7 @@ class UtilsTests:
             assert(count == n)
         os.remove(fnpTmp)
 
+
 class dotdict(dict):
     # dot.notation access to dictionary attributes
     # http://stackoverflow.com/a/23689767
@@ -531,9 +557,11 @@ class dotdict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
+
 def main():
     ut = UtilsTests()
     ut.numLines()
+ 
 
 if __name__ == "__main__":
     sys.exit(main())

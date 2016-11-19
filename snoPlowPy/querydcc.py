@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os, sys, json, shutil, collections
+import os
+import sys
+import json
+import shutil
+import collections
 from files_and_paths import Dirs, Urls, Datasets, Genome, Tools
 from datetime import datetime
 from utils import Utils, cat
+
 
 class QueryDCC:
     def __init__(self, host=None, auth=True, cache=None):
@@ -14,11 +19,11 @@ class QueryDCC:
             self.host = host
         self.cache = cache
 
-    def getURL(self, url, quiet = False):
+    def getURL(self, url, quiet=False):
         if self.cache:
             ret = self.cache.getOrSet(url, lambda: Utils.query(url,
-                                                               auth = self.auth,
-                                                               quiet = quiet),
+                                                               auth=self.auth,
+                                                               quiet=quiet),
                                       quiet)
         else:
             ret = Utils.query(url, auth=self.auth, quiet=quiet)
@@ -26,7 +31,7 @@ class QueryDCC:
             raise Exception("could not download " + url)
         return ret
 
-    def getFromAlias(self, alias, quiet = False):
+    def getFromAlias(self, alias, quiet=False):
         url = "%s/%s/?format=json" % (self.host, alias)
         ret = self.getURL(url, quiet)
         try:

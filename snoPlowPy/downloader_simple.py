@@ -2,13 +2,17 @@
 
 from __future__ import print_function
 
-import os, sys, argparse, json
+import os
+import sys
+import argparse
+import json
 from utils import Utils
 from joblib import Parallel, delayed
 import traceback
 
 from files_and_paths import Dirs, Datasets
 from helpers_metadata import Exp, ExpFile
+
 
 class DownloaderSimple:
     def __init__(self, accessionIDs, args):
@@ -29,9 +33,10 @@ class DownloaderSimple:
                         f.download()
                         print(f.fnp())
                 print(idx + 1, "of", total, "done")
-            except Exception, err:
+            except Exception as err:
                 print(idx + 1, "of", total, "error")
                 traceback.print_exc()
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -44,13 +49,15 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def main():
     args = parse_args()
     if args.f:
-        with open(args.f,'r') as f:
+        with open(args.f, 'r') as f:
             for line in f:
                 ds = DownloaderSimple([line.strip("\n")], args)
                 ds.run()
+
 
 if __name__ == "__main__":
     sys.exit(main())

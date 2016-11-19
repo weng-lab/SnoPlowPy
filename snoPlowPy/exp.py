@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os, sys, json, shutil, collections
+import os
+import sys
+import json
+import shutil
+import collections
 from files_and_paths import Dirs, Urls, Datasets, Genome, Tools
 from datetime import datetime
 from utils import Utils, cat
+
 
 class Exp(object):
     def __init__(self, encodeID):
@@ -24,7 +29,8 @@ class Exp(object):
     def fromJsonFile(cls, encodeID, force=False):
         ret = cls(encodeID)
         if force or not os.path.exists(ret.jsonFnp):
-            Utils.download(ret.jsonUrl, ret.jsonFnp, True, force, skipSizeCheck=True)
+            Utils.download(ret.jsonUrl, ret.jsonFnp, True, force,
+                           skipSizeCheck=True)
         with open(ret.jsonFnp) as f:
             ret.jsondata = json.load(f)
         ret._parse(force)
@@ -39,7 +45,7 @@ class Exp(object):
 
     @classmethod
     def fromWebservice(cls, rows):
-        r = rows[0][0] # one row per file, so just grab info from first file
+        r = rows[0][0]  # one row per file, so just grab info from first file
         ret = cls(r["accession"])
         ret.age = r["age"]
         ret.assay_term_name = r["assay_term_name"]
@@ -99,7 +105,7 @@ class Exp(object):
     def isStam(self):
         return "john-stamatoyannopoulos" == self.lab
 
-    def dbCrossRef(self): # database crossrefs
+    def dbCrossRef(self):  # database crossrefs
         return self.dbxref
 
     def getExpJson(self):
@@ -113,7 +119,8 @@ class Exp(object):
         return self.jsondata
 
     def _parse(self, force):
-        # NOTE! changes to fields during parsing could affect data import into database...
+        # NOTE! changes to fields during parsing could affect data import into
+        # database...
 
         g = self.jsondata
         self.encodeid = g["@id"]
@@ -150,7 +157,7 @@ class Exp(object):
                 self.target = g["target"]["investigated_as"][0]
                 self.tf = g["target"]["label"]
             except:
-                try: # ROADMAP-style Encode exp?
+                try:  # ROADMAP-style Encode exp?
                     self.target = g["target"][0]["investigated_as"][0]
                     self.tf = g["target"][0]["label"]
                 except:
@@ -170,7 +177,8 @@ class Exp(object):
 
         revokedFiles = set([f["accession"] for f in g["revoked_files"]])
         originalFiles = set([x.split('/')[2] for x in g["original_files"]]).difference(revokedFiles)
-        fileIDs = set([f["accession"] for f in g["files"]]).difference(revokedFiles).union(originalFiles)
+        fileIDs = set([f["accession"]
+                       for f in g["files"]]).difference(revokedFiles).union(originalFiles)
         self.unreleased_files = originalFiles.difference(set([f["accession"] for f in g["files"]]))
 
         self.files = []
@@ -236,7 +244,7 @@ class Exp(object):
         bigwigs = self.bigWigFilters(assembly)
 
         if not bigwigs:
-            #print("no bigwigs (raw) signal found: ", self.url)
+            # print("no bigwigs (raw) signal found: ", self.url)
             return None
 
         if 0 == len(bigwigs):
@@ -249,7 +257,8 @@ class Exp(object):
                 bw.download()
             return bw.fnp()
 
-        fbigwigs = filter(lambda x: x.bio_rep and x.bio_rep in ['1','2','3','4','5'], bigwigs)
+        fbigwigs = filter(lambda x: x.bio_rep and x.bio_rep in ['1', '2', '3', '4', '5'],
+                          bigwigs)
         if fbigwigs:
             bigwigs = fbigwigs
         if not bigwigs:
@@ -280,12 +289,14 @@ class Exp(object):
             print("no bams found:", self.encodeID)
             return None, None
         if 1 == len(bams):
-            if not os.path.exists(bams[0].fnp()): bams[0].download()
+            if not os.path.exists(bams[0].fnp()):
+                bams[0].download()
             return bams[0].fnp(), bams[0].assembly
         print("too many bams (%d) found for" % len(bams), self.encodeID)
         print("bam IDs are")
         for bam in bams:
-            if args and args.process: bams[0].download()
+            if args and args.process:
+                bams[0].download()
             return bam.fnp(), bam.assembly
         print("too many bams found for", self.encodeID)
         return None, None
@@ -327,8 +338,9 @@ class Exp(object):
             lambda x: x.isBedNarrowPeak() and x.isIDR(),
             lambda x: x.isBedNarrowPeak() and x.isReplicatedPeaks(),
             lambda x: x.isBedNarrowPeak() and isinstance(x.bio_rep, collections.Iterable) and
-                                                    '1' in x.bio_rep and '2' in x.bio_rep,
-            lambda x: x.isBedNarrowPeak() and 1 in x.biological_replicates and 2 in x.biological_replicates,
+            '1' in x.bio_rep and '2' in x.bio_rep,
+            lambda x: x.isBedNarrowPeak() and 1 in x.biological_replicates and
+            2 in x.biological_replicates,
             lambda x: x.isBedNarrowPeak(),
             lambda x: x.isBedBroadPeak(),
             lambda x: x.isPeaks()
@@ -348,7 +360,7 @@ class Exp(object):
 
     def getIDRnarrowPeak(self, assembly, args):
         beds = self.bedFilters(assembly)
-        #if args and args.v: print(beds)
+        # if args and args.v: print(beds)
 
         for bed in beds:
             if args and args.process:
@@ -357,7 +369,7 @@ class Exp(object):
             bed = beds[0]
             return bed.fnp()
 
-        fbeds = filter(lambda x: x.bio_rep and x.bio_rep in ['1','2','3','4','5'], beds)
+        fbeds = filter(lambda x: x.bio_rep and x.bio_rep in ['1', '2', '3', '4', '5'], beds)
         if fbeds:
             beds = fbeds
         if len(beds) > 1:
@@ -369,6 +381,6 @@ class Exp(object):
                     self.computeMergePeaks(assembly, fnps)
             return mergeFnp
         else:
-            #if args and args.v: print("no beds after replicate filtering")
+            # if args and args.v: print("no beds after replicate filtering")
             pass
         return None
