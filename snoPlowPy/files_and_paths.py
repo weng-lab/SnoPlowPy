@@ -2,7 +2,7 @@
 
 import os
 import sys
-from global_config import GlobalConfig
+from .global_config import GlobalConfig
 
 
 def FindMetadataBaseDir():
@@ -28,8 +28,8 @@ def BaseDirFromList(dirs, dirname, envsearched, exit_on_failure=True):
     for d in dirs:
         if os.path.exists(d):
             return d
-    print "missing %s base folder; searched " % dirname, ";".join(dirs)
-    print "check directory or %s environment variable." % envsearched
+    print("missing %s base folder; searched " % dirname, ";".join(dirs))
+    print("check directory or %s environment variable." % envsearched)
     if exit_on_failure:
         sys.exit(1)
     return "/tmp"
@@ -79,14 +79,14 @@ class Dirs:
     def ToolsFnp(fn):
         fnp = os.path.join(Dirs.tools, fn)
         if not os.path.exists(fnp):
-            print "WARN: tool missing:", fnp
+            print("WARN: tool missing:", fnp)
         return fnp
 
     @staticmethod
     def GenomeFnp(fn):
         fnp = os.path.join(Dirs.genomes, fn)
         if not os.path.exists(fnp):
-            print "genome file missing:", fnp
+            print("genome file missing:", fnp)
             raise Exception("file missing: " + fnp)
         return fnp
 
@@ -94,7 +94,7 @@ class Dirs:
     def LiftOverChainFnp(fn):
         fnp = os.path.join(Dirs.liftOverChainFiles, fn)
         if not os.path.exists(fnp):
-            print "liftOver chain file missing:", fnp
+            print("liftOver chain file missing:", fnp)
             raise Exception("file missing: " + fnp)
         return fnp
 

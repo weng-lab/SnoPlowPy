@@ -6,7 +6,7 @@ import sys
 import argparse
 import traceback
 
-from exp import Exp
+from .exp import Exp
 
 
 class DownloaderSimple:

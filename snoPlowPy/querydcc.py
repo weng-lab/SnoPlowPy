@@ -2,8 +2,8 @@
 
 from __future__ import print_function
 import json
-from utils import Utils
-from exp import Exp
+from .utils import Utils
+from .exp import Exp
 
 
 class QueryDCC:

@@ -6,12 +6,12 @@ import os
 import sys
 import argparse
 import json
-from utils import Utils
+from .utils import Utils
 from joblib import Parallel, delayed
 import traceback
 
-from files_and_paths import Datasets
-from exp import Exp
+from .files_and_paths import Datasets
+from .exp import Exp
 
 
 def loadBedBigWigHdf5Bam(idx, total, accessionID, force, refresh, jsononly):

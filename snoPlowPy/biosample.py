@@ -3,8 +3,8 @@
 from __future__ import print_function
 import os
 import json
-from files_and_paths import Dirs, Urls
-from utils import Utils
+from .files_and_paths import Dirs, Urls
+from .utils import Utils
 
 
 class Biosample:

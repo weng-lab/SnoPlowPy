@@ -18,7 +18,6 @@ import tempfile
 import time
 from subprocess import Popen, PIPE
 import hashlib
-import urllib2
 
 from requests.auth import HTTPBasicAuth
 import requests
@@ -372,10 +371,10 @@ class Utils:
 
     @staticmethod
     def checkIfUrlExists(url):
-        # http://stackoverflow.com/a/7347995
+        # http://stackoverflow.com/a/19582542
         try:
-            ret = urllib2.urlopen(url)
-            return ret.code == 200
+            ret = requests.head(url)
+            return ret.status_code == 200
         except:
             return False
 
