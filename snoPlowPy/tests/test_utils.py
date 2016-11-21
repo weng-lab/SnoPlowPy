@@ -9,23 +9,26 @@ from snoPlowPy.utils import Utils, numLines
 
 class TestUtils:
     def test_numLines(self):
-        n = 173
-        with tempfile.NamedTemporaryFile("w", delete=False) as f:
-            fnpTmp = f.name
-            for i in xrange(n):
-                f.write("hi " + str(i) + "\n")
-        count = numLines(fnpTmp)
-        os.remove(fnpTmp)
-        assert(count == n)
+        for n in [0, 173]:
+            with tempfile.NamedTemporaryFile("w", delete=False) as f:
+                fnpTmp = f.name
+                for i in xrange(n):
+                    f.write("hi " + str(i) + "\n")
+            count = numLines(fnpTmp)
+            os.remove(fnpTmp)
+            assert(count == n), "n is " + str(n)
 
     def test_deleteFileIfSizeNotMatch(self):
-        ints = [1,2,3]
-        with tempfile.NamedTemporaryFile("w", delete=False) as f:
-            fnpTmp = f.name
-            f.write(bytes(ints))
-        numBytes = 8 * len(ints)
-        Utils.deleteFileIfSizeNotMatch(fnpTmp, numBytes)
-        assert not os.path.exists(fnpTmp)
+        for ints in [[], [1,2,3]]:
+            with tempfile.NamedTemporaryFile("w", delete=False) as f:
+                fnpTmp = f.name
+                f.write(bytearray(ints))
+            numBytes = len(ints)
+            Utils.deleteFileIfSizeNotMatch(fnpTmp, numBytes)
+            assert os.path.exists(fnpTmp)
+            numBytes += 1
+            Utils.deleteFileIfSizeNotMatch(fnpTmp, numBytes)
+            assert not os.path.exists(fnpTmp)
 
     @staticmethod
     def get_file_if_size_diff(url, d):
@@ -454,6 +457,7 @@ class TestUtils:
         return time.strftime("%Y%m%d-%H%M%S")
 
     def test_remove_non_ascii(self):
+        assert "" == Utils.remove_non_ascii("")
         a = u"aaaàçççñññ"
         b = 'aaa'
         assert b == Utils.remove_non_ascii(a)
