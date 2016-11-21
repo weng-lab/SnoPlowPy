@@ -1,84 +1,31 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
-
 import os
-import stat
-import sys
-import shutil
-import itertools
-import re
-import subprocess
-import errno
-import gzip
-import tarfile
-import zipfile
-import urllib
 import tempfile
-import time
-from subprocess import Popen, PIPE
-import hashlib
 
-from requests.auth import HTTPBasicAuth
-import requests
+from snoPlowPy.utils import Utils, numLines
 
+class TestUtils:
+    def test_numLines(self):
+        n = 173
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            fnpTmp = f.name
+            for i in xrange(n):
+                f.write("hi " + str(i) + "\n")
+        count = numLines(fnpTmp)
+        os.remove(fnpTmp)
+        assert(count == n)
 
-def printWroteNumLines(fnp):
-    print("\twrote", fnp, '(' + "{:,}".format(numLines(fnp)) + ' lines)')
-
-
-def cat(fnp):
-    if fnp.endswith(".gz"):
-        return "zcat " + fnp
-    return "cat " + fnp
-
-
-def numLines(fnp):
-    cmds = [cat(fnp), "| wc -l"]
-    return int(Utils.runCmds(cmds)[0])
-
-
-def usage():
-    print("USUAGE:")
-    print(os.path.basename(sys.argv[0]), "submit")
-
-
-def readFile(fnp, needFile=True):
-    if not os.path.exists(fnp):
-        if needFile:
-            print("ERROR: file missing:")
-            print(fnp)
-            sys.exit(1)
-        return None
-    with open(fnp) as f:
-        return f.readlines()
-
-
-def ranges(i):
-    # http://stackoverflow.com/a/4629241
-    for a, b in itertools.groupby(enumerate(i), lambda x, y: y - x):
-        b = list(b)
-        yield b[0][1], b[-1][1]
-
-
-class Utils:
-    FileUmask = stat.S_IRUSR | stat.S_IWUSR  # user read/write
-    FileUmask |= stat.S_IRGRP | stat.S_IWGRP  # group read/write
-    FileUmask |= stat.S_IROTH  # others read
-
-    DirUmask = stat.S_IRUSR | stat.S_IWUSR  # user read/write
-    DirUmask |= stat.S_IRGRP | stat.S_IWGRP  # group read/write
-    DirUmask |= stat.S_IROTH  # others read
-
-    @staticmethod
-    def deleteFileIfSizeNotMatch(fnp, file_size_bytes):
-        if not os.path.exists(fnp):
-            return
-        if not file_size_bytes:
-            return
-        if os.path.getsize(fnp) == file_size_bytes:
-            return
-        os.remove(fnp)
+    def test_deleteFileIfSizeNotMatch(self):
+        ints = [1,2,3]
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            fnpTmp = f.name
+            f.write(bytes(ints))
+        numBytes = 8 * len(ints)
+        Utils.deleteFileIfSizeNotMatch(fnpTmp, numBytes)
+        assert not os.path.exists(fnpTmp)
 
     @staticmethod
     def get_file_if_size_diff(url, d):
@@ -133,7 +80,7 @@ class Utils:
     @staticmethod
     def download(url, fnp, auth=None, force=None,
                  file_size_bytes=0, skipSizeCheck=None,
-                 quiet=False, umask=FileUmask):
+                 quiet=False, umask=Utils.FileUmask):
         Utils.ensureDir(fnp)
         if not skipSizeCheck:
             if 0 == file_size_bytes:
@@ -206,19 +153,20 @@ class Utils:
 
         return r.content
 
-    @staticmethod
-    def sanitize(s):
-        return re.sub(r'\W+', '', s).lower()
+    def test_sanitize(self):
+        bad = "aBc1234%^&*"
+        good = "aBc1234".lower()
+        assert good == Utils.sanitize(bad)
 
     @staticmethod
-    def ensureDir(fnp, umask=DirUmask):
+    def ensureDir(fnp, umask=Utils.DirUmask):
         d = os.path.dirname(fnp)
         if d != "" and not os.path.exists(d):
             Utils.mkdir_p(d, umask)
         return d
 
     @staticmethod
-    def mkdir(path, umask=DirUmask):
+    def mkdir(path, umask=Utils.DirUmask):
         try:
             os.mkdir(path)
             # chmod g+w
@@ -231,7 +179,7 @@ class Utils:
                 raise
 
     @staticmethod
-    def mkdir_p(path, umask=DirUmask):
+    def mkdir_p(path, umask=Utils.DirUmask):
         abspath = os.path.abspath(path)
         dirname = os.path.dirname(abspath)
         if dirname != abspath:  # i.e. dirname("/") == "/"
@@ -309,19 +257,15 @@ class Utils:
         except:
             return 0
 
-    @staticmethod
-    def titleCase(s):
-        # http://stackoverflow.com/a/3729957
-        # http://grammar.yourdictionary.com/capitalization/rules-for-capitalization-in-titles.html
-        articles = ['a', 'an', 'the', 'at', 'by', 'for', 'in', 'of', 'on', 'to',
-                    'up', 'and', 'as', 'but', 'or', 'nor']
-        exceptions = articles
-        word_list = re.split(' ', s)  # re.split behaves as expected
-        final = [word_list[0].capitalize()]
-        for word in word_list[1:]:
-            final.append(word in exceptions and word or word.capitalize())
-        return " ".join(final)
+    def test_titleCase(self):
+        old = "convert to titlecase"
+        new = "Convert to Titlecase"
+        assert new == Utils.titleCase(old)
 
+        old = "a silly story"
+        new = "A Silly Story"
+        assert new == Utils.titleCase(old)
+        
     @staticmethod
     def color(json, force=None):
         # https://stackoverflow.com/questions/25638905/coloring-json-output-in-python
@@ -353,14 +297,11 @@ class Utils:
         p.stdin.close()
         p.wait()
 
-    @staticmethod
-    def md5(fnp, chunk_size=1048576):
-        # from http://stackoverflow.com/a/3431838
-        _hex = hashlib.md5()
-        with open(fnp, 'rb') as f:
-            for chunk in iter(lambda: f.read(chunk_size), b''):
-                _hex.update(chunk)
-        return _hex.hexdigest()
+    def test_md5(self):
+        fnp = "/bin/bash"
+        import hashlib # slow but correct
+        good = hashlib.md5(open(fnp, 'rb').read()).hexdigest()
+        assert Utils.md5(fnp) == good
 
     @staticmethod
     def is_gzipped(fnp):
@@ -440,10 +381,9 @@ class Utils:
             print("rm -rf", d)
             shutil.rmtree(d)
 
-    @staticmethod
-    def num_cores():
+    def test_num_cores(self):
         import multiprocessing
-        return multiprocessing.cpu_count()
+        assert multiprocessing.cpu_count() == Utils.num_cores()
 
     @staticmethod
     def un_xz_tar(fnp, d):
@@ -513,37 +453,7 @@ class Utils:
         import time
         return time.strftime("%Y%m%d-%H%M%S")
 
-    @staticmethod
-    def remove_non_ascii(s):
-        # http://drumcoder.co.uk/blog/2012/jul/13/removing-non-ascii-chars-string-python/
-        return "".join(i for i in s if ord(i) < 128)
-
-
-class Timer(object):
-    # http://stackoverflow.com/a/5849861
-    def __init__(self, name=None):
-        self.name = name
-
-    def __enter__(self):
-        self.tstart = time.time()
-
-    def __exit__(self, type, value, traceback):
-        if self.name:
-            print('[%s]' % self.name,)
-        print('Elapsed: %s' % (time.time() - self.tstart))
-
-class dotdict(dict):
-    # dot.notation access to dictionary attributes
-    # http://stackoverflow.com/a/23689767
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
-
-
-def main():
-    ut = UtilsTests()
-    ut.numLines()
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+    def test_remove_non_ascii(self):
+        a = u"aaaàçççñññ"
+        b = 'aaa'
+        assert b == Utils.remove_non_ascii(a)
