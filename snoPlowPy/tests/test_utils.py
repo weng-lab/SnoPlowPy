@@ -2,25 +2,38 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+import sys
 import os
 import tempfile
+import requests
+import shutil
+import tarfile
+import zipfile
+import gzip
+import errno
+import subprocess
+from future.moves.urllib.request import urlretrieve, urlopen
+from builtins import str, range
+from subprocess import Popen, PIPE
+from requests.auth import HTTPBasicAuth
 
 from snoPlowPy.utils import Utils, numLines
+
 
 class TestUtils:
     def test_numLines(self):
         for n in [0, 173]:
             with tempfile.NamedTemporaryFile("w", delete=False) as f:
                 fnpTmp = f.name
-                for i in xrange(n):
+                for i in range(n):
                     f.write("hi " + str(i) + "\n")
             count = numLines(fnpTmp)
             os.remove(fnpTmp)
             assert(count == n), "n is " + str(n)
 
     def test_deleteFileIfSizeNotMatch(self):
-        for ints in [[], [1,2,3]]:
-            with tempfile.NamedTemporaryFile("w", delete=False) as f:
+        for ints in [[], [1, 2, 3]]:
+            with tempfile.NamedTemporaryFile("wb", delete=False) as f:
                 fnpTmp = f.name
                 f.write(bytearray(ints))
             numBytes = len(ints)
@@ -34,7 +47,7 @@ class TestUtils:
     def get_file_if_size_diff(url, d):
         fn = url.split('/')[-1]
         out_fnp = os.path.join(d, fn)
-        net_file_size = int(urllib.urlopen(url).info()['Content-Length'])
+        net_file_size = int(urlopen(url).info()['Content-Length'])
         if os.path.exists(out_fnp):
             fn_size = os.path.getsize(out_fnp)
             if fn_size == net_file_size:
@@ -45,7 +58,7 @@ class TestUtils:
                 print("\t", "on disk:", fn_size)
                 print("\t", "from net:", net_file_size)
         print("retrieving", fn)
-        urllib.urlretrieve(url, out_fnp)
+        urlretrieve(url, out_fnp)
         return out_fnp
 
     @staticmethod
@@ -101,7 +114,7 @@ class TestUtils:
         Utils.quietPrint(quiet, "downloading", url, "...")
 
         if url.startswith("ftp://"):
-            fnpTmp = urllib.urlretrieve(url)[0]
+            fnpTmp = urlretrieve(url)[0]
             shutil.move(fnpTmp, fnp)
             # chmod g+w
             st = os.stat(fnp)
@@ -268,14 +281,14 @@ class TestUtils:
         old = "a silly story"
         new = "A Silly Story"
         assert new == Utils.titleCase(old)
-        
+
     @staticmethod
     def color(json, force=None):
         # https://stackoverflow.com/questions/25638905/coloring-json-output-in-python
         if force or sys.stdout.isatty():
             try:    # if we can load pygments, return color
                 from pygments import highlight, lexers, formatters
-                colorful_json = highlight(unicode(json, 'UTF-8'),
+                colorful_json = highlight(str(json, 'UTF-8'),
                                           lexers.JsonLexer(),
                                           formatters.TerminalFormatter())
                 return colorful_json
@@ -302,7 +315,7 @@ class TestUtils:
 
     def test_md5(self):
         fnp = "/bin/bash"
-        import hashlib # slow but correct
+        import hashlib  # slow but correct
         good = hashlib.md5(open(fnp, 'rb').read()).hexdigest()
         assert Utils.md5(fnp) == good
 
@@ -351,7 +364,7 @@ class TestUtils:
 
     @staticmethod
     def getStringFromListOrString(s):
-        if isinstance(s, basestring):
+        if isinstance(s, str):
             return s
         toks = list(set(s))
         if 1 == len(toks):
