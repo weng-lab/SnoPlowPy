@@ -31,7 +31,7 @@ clean-test:
 lint:
 	flake8 snoPlowPy
 
-test:
+test: clean-pyc
 	pytest snoPlowPy
 
 test-doc:

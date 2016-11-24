@@ -13,7 +13,8 @@ import errno
 import gzip
 import tarfile
 import zipfile
-import urllib
+from future.moves.urllib.request import urlretrieve, urlopen
+from builtins import str
 import tempfile
 import time
 from subprocess import Popen, PIPE
@@ -28,6 +29,12 @@ def printWroteNumLines(fnp):
 
 
 def cat(fnp):
+    '''
+    >>> cat('abc')
+    'cat abc'
+    >>> cat('abc.gz')
+    'zcat abc.gz'
+    '''
     if fnp.endswith(".gz"):
         return "zcat " + fnp
     return "cat " + fnp
@@ -55,8 +62,12 @@ def readFile(fnp, needFile=True):
 
 
 def ranges(i):
+    '''
+    >>> list(ranges([0, 1, 2, 3, 4, 7, 8, 9, 11]))
+    [(0, 4), (7, 9), (11, 11)]
+    '''
     # http://stackoverflow.com/a/4629241
-    for a, b in itertools.groupby(enumerate(i), lambda x, y: y - x):
+    for a, b in itertools.groupby(enumerate(i), lambda x: x[1] - x[0]):
         b = list(b)
         yield b[0][1], b[-1][1]
 
@@ -84,7 +95,7 @@ class Utils:
     def get_file_if_size_diff(url, d):
         fn = url.split('/')[-1]
         out_fnp = os.path.join(d, fn)
-        net_file_size = int(urllib.urlopen(url).info()['Content-Length'])
+        net_file_size = int(urlopen(url).info()['Content-Length'])
         if os.path.exists(out_fnp):
             fn_size = os.path.getsize(out_fnp)
             if fn_size == net_file_size:
@@ -95,7 +106,7 @@ class Utils:
                 print("\t", "on disk:", fn_size)
                 print("\t", "from net:", net_file_size)
         print("retrieving", fn)
-        urllib.urlretrieve(url, out_fnp)
+        urlretrieve(url, out_fnp)
         return out_fnp
 
     @staticmethod
@@ -151,7 +162,7 @@ class Utils:
         Utils.quietPrint(quiet, "downloading", url, "...")
 
         if url.startswith("ftp://"):
-            fnpTmp = urllib.urlretrieve(url)[0]
+            fnpTmp = urlretrieve(url)[0]
             shutil.move(fnpTmp, fnp)
             # chmod g+w
             st = os.stat(fnp)
@@ -251,9 +262,9 @@ class Utils:
         # Poll process for new output until finished
         while True:
             nextline = process.stdout.readline()
-            if nextline == '' and process.poll() is not None:
+            if nextline == b'' and process.poll() is not None:
                 break
-            sys.stdout.write(nextline)
+            sys.stdout.write(str(nextline))
             sys.stdout.flush()
 
         output = process.communicate()[0]
@@ -283,7 +294,7 @@ class Utils:
         # Poll process for new output until finished
         while True:
             nextline = process.stdout.readline()
-            if nextline == '' and process.poll() is not None:
+            if nextline == b'' and process.poll() is not None:
                 break
             if nextline:
                 ret.append(nextline)
@@ -328,7 +339,7 @@ class Utils:
         if force or sys.stdout.isatty():
             try:    # if we can load pygments, return color
                 from pygments import highlight, lexers, formatters
-                colorful_json = highlight(unicode(json, 'UTF-8'),
+                colorful_json = highlight(str(json, 'UTF-8'),
                                           lexers.JsonLexer(),
                                           formatters.TerminalFormatter())
                 return colorful_json
@@ -386,7 +397,6 @@ class Utils:
             os.makedirs(os.path.dirname(fnp))
         with open(fnp, "w") as f:
             f.write(" ")
-            f.close()
 
     @staticmethod
     def ftouch(fnp):
@@ -407,7 +417,7 @@ class Utils:
 
     @staticmethod
     def getStringFromListOrString(s):
-        if isinstance(s, basestring):
+        if isinstance(s, str):
             return s
         toks = list(set(s))
         if 1 == len(toks):
@@ -532,6 +542,7 @@ class Timer(object):
             print('[%s]' % self.name,)
         print('Elapsed: %s' % (time.time() - self.tstart))
 
+
 class dotdict(dict):
     # dot.notation access to dictionary attributes
     # http://stackoverflow.com/a/23689767
@@ -540,10 +551,6 @@ class dotdict(dict):
     __delattr__ = dict.__delitem__
 
 
-def main():
-    ut = UtilsTests()
-    ut.numLines()
-
-
 if __name__ == "__main__":
-    sys.exit(main())
+    import doctest
+    doctest.testmod()
