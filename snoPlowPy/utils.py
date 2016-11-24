@@ -262,9 +262,9 @@ class Utils:
         # Poll process for new output until finished
         while True:
             nextline = process.stdout.readline()
-            if nextline == '' and process.poll() is not None:
+            if nextline == b'' and process.poll() is not None:
                 break
-            sys.stdout.write(nextline)
+            sys.stdout.write(str(nextline))
             sys.stdout.flush()
 
         output = process.communicate()[0]
@@ -397,7 +397,6 @@ class Utils:
             os.makedirs(os.path.dirname(fnp))
         with open(fnp, "w") as f:
             f.write(" ")
-            f.close()
 
     @staticmethod
     def ftouch(fnp):
