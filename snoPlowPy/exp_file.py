@@ -14,9 +14,23 @@ class ExpFile(object):
 
     # from http://stackoverflow.com/a/682545
     @classmethod
+    def fromJson(cls, expID, fileID, j):
+        ret = cls(expID, fileID)
+        ret._parse(expID, fileID, j)
+        return ret
+
+    @classmethod
+    # in case file JSON is not part of the experiment json, for some unknown reason (revoked?)
     def fromJsonFile(cls, expID, fileID, force):
         ret = cls(expID, fileID)
-        ret._parse(fileID, force)
+
+        jsonFnp = os.path.join(Dirs.encode_json, "exps", expID, fileID + ".json")
+        jsonUrl = Urls.base + "/files/{fileID}/?format=json".format(fileID=fileID)
+        Utils.ensureDir(jsonFnp)
+        Utils.download(jsonUrl, jsonFnp, True, force, skipSizeCheck=True)
+        with open(jsonFnp) as f:
+            j = json.load(f)
+        ret._parse(expID, fileID, j)
         return ret
 
     @classmethod
@@ -168,19 +182,10 @@ class ExpFile(object):
     def featurename(self):
         return self.fileID
 
-    def jsonFileFnp(self, fileID):
-        return os.path.join(Dirs.encode_json, "exps", self.expID, fileID + ".json")
-
-    def _parse(self, fileID, force):
+    def _parse(self, expID, fileID, g):
         # NOTE! changes to fields during parsing could affect data import into database...
 
         self.jsonUrl = Urls.base + "/files/{fileID}/?format=json".format(fileID=fileID)
-
-        fnp = self.jsonFileFnp(fileID)
-        Utils.ensureDir(fnp)
-        Utils.download(self.jsonUrl, fnp, True, force, skipSizeCheck=True)
-        with open(fnp) as f:
-            g = json.load(f)
 
         self.jsondata = g
         self.encodeid = g["@id"]

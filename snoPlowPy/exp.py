@@ -8,10 +8,11 @@ from .files_and_paths import Dirs, Urls, Genome, Tools
 from datetime import datetime
 from .utils import Utils, cat
 from .exp_file import ExpFile
+from .exp_metadata import ExpMetadata
 
-
-class Exp(object):
+class Exp(ExpMetadata):
     def __init__(self, encodeID):
+        ExpMetadata.__init__(self)
         self.encodeID = encodeID
         self.accessionID = encodeID
         self.jsondata = None
@@ -32,38 +33,21 @@ class Exp(object):
                            skipSizeCheck=True)
         with open(ret.jsonFnp) as f:
             ret.jsondata = json.load(f)
-        ret._parse(force)
+        ret._parseJson(force)
         return ret
 
     @classmethod
     def fromJson(cls, jsondata, force=False):
         ret = cls(jsondata["accession"])
         ret.jsondata = jsondata
-        ret._parse(force)
+        ret._parseJson(force)
         return ret
 
     @classmethod
     def fromWebservice(cls, rows):
         r = rows[0][0]  # one row per file, so just grab info from first file
         ret = cls(r["accession"])
-        ret.age = r["age"]
-        ret.assay_term_name = r["assay_term_name"]
-        ret.assembly = r["assembly"]
-        ret.biosample_term_id = r["biosample_term_id"]
-        ret.biosample_term_name = r["biosample_term_name"]
-        ret.biosample_type = r["biosample_type"]
-        ret.description = r["description"]
-        ret.lab = r["lab"]
-        ret.label = r["label"]
-        ret.status = r["status"]
-        ret.target = r["target"]
-        ret.tf = r["label"]
-
-        ret.organ_slims = ""
-        if "organ_slims" in r:
-            ret.organ_slims = r["organ_slims"]
-
-        ret.files = [ExpFile.fromWebservice(ret.encodeID, e[0]) for e in rows]
+        ret._parseWS(rows)
         return ret
 
     def __repr__(self):
@@ -116,74 +100,6 @@ class Exp(object):
             with open(fnp) as f:
                 self.jsondata = json.load(f)
         return self.jsondata
-
-    def _parse(self, force):
-        # NOTE! changes to fields during parsing could affect data import into
-        # database...
-
-        g = self.jsondata
-        self.encodeid = g["@id"]
-
-        if "Annotation" in g["@type"]:
-            self.assay_term_name = g["annotation_type"]
-        else:
-            self.assay_term_name = g["assay_term_name"]
-
-        self.description = g["description"]
-        self.isPairedEnd = True if "run_type" in g and g["run_type"] == "paired-ended" else False
-
-        self.biosample_term_name = Utils.getStringFromListOrString(g["biosample_term_name"])
-        self.biosample_term_id = Utils.getStringFromListOrString(g["biosample_term_id"])
-        self.biosample_type = Utils.getStringFromListOrString(g["biosample_type"])
-
-        self.accession = g["accession"]
-        self.status = g["status"]
-        self.lab = g["lab"]["name"]
-
-        self.date_released = "UNKNOWN"
-        if "date_released" in g:
-            self.date_released = g["date_released"]
-            self.date_released_obj = datetime.strptime(g["date_released"], "%Y-%m-%d")
-
-        self.assembly = ""
-        if g["assembly"]:
-            self.assembly = ','.join(g["assembly"])
-
-        self.target = ""
-        self.tf = ""
-        if "target" in g:
-            try:
-                self.target = g["target"]["investigated_as"][0]
-                self.tf = g["target"]["label"]
-            except:
-                try:  # ROADMAP-style Encode exp?
-                    self.target = g["target"][0]["investigated_as"][0]
-                    self.tf = g["target"][0]["label"]
-                except:
-                    pass
-        self.label = self.tf
-
-        self.age = ""
-        try:
-            self.age = g["replicates"][0]["library"]["biosample"]["age"]
-        except:
-            pass
-
-        if "target" in self.jsondata and "dbxref" in self.jsondata["target"]:
-            self.dbxref = self.jsondata["target"]["dbxref"]
-        else:
-            self.dbxref = []
-
-        revokedFiles = set([f["accession"] for f in g["revoked_files"]])
-        originalFiles = set([x.split('/')[2] for x in g["original_files"]]).difference(revokedFiles)
-        fileIDs = set([f["accession"]
-                       for f in g["files"]]).difference(revokedFiles).union(originalFiles)
-        self.unreleased_files = originalFiles.difference(set([f["accession"] for f in g["files"]]))
-
-        self.files = []
-        for f in fileIDs:
-            ef = ExpFile.fromJsonFile(self.accession, f, force)
-            self.files.append(ef)
 
     def getMeanBigWigFnp(self, assembly, fnps):
         stems = [os.path.basename(fnp).split('.')[0] for fnp in fnps]
