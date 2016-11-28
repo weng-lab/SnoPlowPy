@@ -67,12 +67,6 @@ class ExpMetadata:
         else:
             self.dbxref = []
 
-        revokedFiles = set([f["accession"] for f in g["revoked_files"]])
-        originalFiles = set([x.split('/')[2] for x in g["original_files"]]).difference(revokedFiles)
-        fileIDs = set([f["accession"]
-                       for f in g["files"]]).difference(revokedFiles).union(originalFiles)
-        self.unreleased_files = originalFiles.difference(set([f["accession"] for f in g["files"]]))
-
         self.files = []
         for j in g["files"]:
             ef = ExpFile.fromJson(self.accession, j["accession"], j)
@@ -82,7 +76,6 @@ class ExpMetadata:
         g = self.jsondata
         revokedFiles = set([f["accession"] for f in g["revoked_files"]])
         originalFiles = set([x.split('/')[2] for x in g["original_files"]]).difference(revokedFiles)
-        fileIDs = set([f["accession"] for f in g["files"]]).difference(revokedFiles).union(originalFiles)
         self.unreleased_file_ids = originalFiles.difference(set([f["accession"] for f in g["files"]]))
 
         files = []
