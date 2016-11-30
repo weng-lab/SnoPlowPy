@@ -29,29 +29,12 @@ class ExpFileMetadata(object):
         self.date_created = g["date_created"]  # add w/o typo
         self.md5sum = g["md5sum"]
         self.file_status = g["status"]
+        self.file_size_bytes = g["file_size"]
 
-        self.file_size_bytes = -1
-        if "file_size" in g:
-            # missing file size for https://www.encodeproject.org/files/ENCFF408AMB/?format=json
-            self.file_size_bytes = g["file_size"]
-
-        self.bio_rep = ""
-        self.tech_rep = ""
-        if "replicate" in g:
-            self.bio_rep = g["replicate"]["biological_replicate_number"]
-            self.tech_rep = g["replicate"]["technical_replicate_number"]
-
-        self.biological_replicates = None
-        if "biological_replicates" in g:
-            self.biological_replicates = g["biological_replicates"]
-
-        self.assembly = ""
-        if "assembly" in g:
-            self.assembly = g["assembly"]
-
-        self.submitted_file_name = ""
-        if "submitted_file_name" in g:
-            self.submitted_file_name = g["submitted_file_name"]
+        self.assembly = g.get("assembly", None)
+        self.submitted_file_name = g.get("submitted_file_name", None)
+        self.biological_replicates = g.get("biological_replicates", None)
+        self.technical_replicates = g.get("technical_replicates", None)
 
         self.isPooled = False
         if "biological_replicates" in g:
