@@ -5,10 +5,9 @@ import os
 import json
 import collections
 from .files_and_paths import Dirs, Urls, Genome, Tools
-from datetime import datetime
 from .utils import Utils, cat
-from .exp_file import ExpFile
 from .exp_metadata import ExpMetadata
+
 
 class Exp(ExpMetadata):
     def __init__(self, encodeID):

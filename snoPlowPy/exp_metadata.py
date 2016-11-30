@@ -3,13 +3,14 @@
 from __future__ import print_function
 from datetime import datetime
 
-from .utils import Utils, cat
+from .utils import Utils
 from .exp_file import ExpFile
+
 
 class ExpMetadata:
     def __init__(self):
         pass
-    
+
     def _parseJson(self, force):
         # NOTE! changes to fields during parsing could affect data import into
         # database...
@@ -76,7 +77,8 @@ class ExpMetadata:
         g = self.jsondata
         revokedFiles = set([f["accession"] for f in g["revoked_files"]])
         originalFiles = set([x.split('/')[2] for x in g["original_files"]]).difference(revokedFiles)
-        self.unreleased_file_ids = originalFiles.difference(set([f["accession"] for f in g["files"]]))
+        self.unreleased_file_ids = originalFiles.difference(set([f["accession"]
+                                                                 for f in g["files"]]))
 
         files = []
         for fileID in self.unreleased_file_ids:
