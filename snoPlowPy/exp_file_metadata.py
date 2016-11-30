@@ -29,8 +29,9 @@ class ExpFileMetadata(object):
         self.file_status = g["status"]
         self.file_size_bytes = g["file_size"]
 
-        self.assembly = g.get("assembly", None)
-        self.submitted_file_name = g.get("submitted_file_name", None)
+        self.assembly = g.get("assembly", "")
+        self.submitted_file_name = g.get("submitted_file_name", "")
+
         self.biological_replicates = g.get("biological_replicates", None)
         self.technical_replicates = g.get("technical_replicates", None)
 
