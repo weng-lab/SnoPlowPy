@@ -39,10 +39,6 @@ class ExpMetadata:
             self.date_released = g["date_released"]
             self.date_released_obj = datetime.strptime(g["date_released"], "%Y-%m-%d")
 
-        self.assembly = ""
-        if g["assembly"]:
-            self.assembly = ','.join(g["assembly"])
-
         self.target = ""
         self.tf = ""
         if "target" in g:
@@ -90,7 +86,6 @@ class ExpMetadata:
         r = rows[0][0]  # one row per file, so just grab info from first file
         self.age = r["age"]
         self.assay_term_name = r["assay_term_name"]
-        self.assembly = r["assembly"]
         self.biosample_term_id = r["biosample_term_id"]
         self.biosample_term_name = r["biosample_term_name"]
         self.biosample_type = r["biosample_type"]

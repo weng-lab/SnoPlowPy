@@ -24,16 +24,22 @@ class ExpFileMetadata(object):
         self.file_type = g["file_type"]
         self.file_format = g["file_format"]
         self.output_type = g["output_type"]
-        self.data_create = g["date_created"]
-        self.date_created = g["date_created"]  # add w/o typo
+        self.date_created = g["date_created"]
         self.md5sum = g["md5sum"]
         self.file_status = g["status"]
         self.file_size_bytes = g["file_size"]
 
-        self.assembly = g.get("assembly", None)
-        self.submitted_file_name = g.get("submitted_file_name", None)
+        self.assembly = g.get("assembly", "")
+        self.submitted_file_name = g.get("submitted_file_name", "")
+
         self.biological_replicates = g.get("biological_replicates", None)
         self.technical_replicates = g.get("technical_replicates", None)
+
+        self.bio_rep = ""
+        self.tech_rep = ""
+        if "replicate" in g:
+            self.bio_rep = g["replicate"]["biological_replicate_number"]
+            self.tech_rep = g["replicate"]["technical_replicate_number"]
 
         self.isPooled = False
         if "biological_replicates" in g:
