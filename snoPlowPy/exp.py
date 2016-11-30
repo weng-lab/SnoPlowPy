@@ -51,7 +51,7 @@ class Exp(ExpMetadata):
 
     def __repr__(self):
         return '\t'.join([self.description, self.assay_term_name,
-                          self.target, self.assembly, self.url])
+                          self.target, self.url])
 
     def __getitem__(self, key):
         if "biosample_term_name" == key:
